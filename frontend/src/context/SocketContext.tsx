@@ -1,6 +1,15 @@
-﻿/**
- * SocketContext — frontend/src/context
- * Architecture placeholder — implement logic here.
- */
+﻿import { createContext, ReactNode } from "react";
 
-export {};
+interface SocketContextType {
+  socket: null;
+}
+
+export const SocketContext = createContext<SocketContextType>({ socket: null });
+
+export function SocketProvider({ children }: { children: ReactNode }) {
+  return (
+    <SocketContext.Provider value={{ socket: null }}>
+      {children}
+    </SocketContext.Provider>
+  );
+}

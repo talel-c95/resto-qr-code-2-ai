@@ -1,6 +1,8 @@
-﻿/**
- * index — frontend/src/components/customer
- * Architecture placeholder — implement logic here.
- */
-
-export {};
+﻿export { QRScanner } from "./QRScanner";
+export { MenuCard } from "./MenuCard";
+export { MenuFilter } from "./MenuFilter";
+export { DynamicMenuBadge } from "./DynamicMenuBadge";
+export { CartItem } from "./CartItem";
+export { CartSummary } from "./CartSummary";
+export { OrderStatusTracker } from "./OrderStatusTracker";
+export { ReceiptView } from "./ReceiptView";
