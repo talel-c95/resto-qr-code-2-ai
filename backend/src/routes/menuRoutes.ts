@@ -1,6 +1,8 @@
-﻿/**
- * menuRoutes — backend/src/routes
- * Architecture placeholder — implement logic here.
- */
+﻿import { Router } from "express";
+import * as menuController from "../controllers/menuController";
 
-export {};
+const router = Router();
+
+router.get("/", menuController.getMenu);
+
+export default router;

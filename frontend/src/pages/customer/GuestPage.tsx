@@ -1,13 +1,26 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createGuestSession } from "@/services/guestSessionService";
 
 export default function GuestPage() {
   const [tableNumber, setTableNumber] = useState("");
   const navigate = useNavigate();
 
-  const handleContinue = () => {
-    if (tableNumber.trim()) {
-      navigate(`/menu/${tableNumber.trim()}`);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleContinue = async () => {
+    const trimmed = tableNumber.trim();
+    if (!trimmed) return;
+
+    setIsSubmitting(true);
+    try {
+      const session = await createGuestSession(trimmed);
+      sessionStorage.setItem("guestSessionId", session.id);
+    } catch (err) {
+      console.error("Failed to create guest session:", err);
+    } finally {
+      setIsSubmitting(false);
+      navigate(`/menu/${trimmed}`);
     }
   };
 
@@ -26,10 +39,10 @@ export default function GuestPage() {
 
       <button
         onClick={handleContinue}
-        disabled={!tableNumber.trim()}
+        disabled={!tableNumber.trim() || isSubmitting}
         className="w-full max-w-xs bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-40"
       >
-        Continue to Menu
+        {isSubmitting ? "Starting..." : "Continue to Menu"}
       </button>
     </div>
   );

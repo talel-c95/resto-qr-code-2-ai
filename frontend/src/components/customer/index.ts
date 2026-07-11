@@ -6,3 +6,4 @@ export { CartItem } from "./CartItem";
 export { CartSummary } from "./CartSummary";
 export { OrderStatusTracker } from "./OrderStatusTracker";
 export { ReceiptView } from "./ReceiptView";
+export { WaiterCallButton } from "./WaiterCallButton";

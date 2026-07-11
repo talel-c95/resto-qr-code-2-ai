@@ -1,6 +1,9 @@
-﻿/**
- * response — backend/src/utils
- * Architecture placeholder — implement logic here.
- */
+﻿import { Response } from "express";
 
-export {};
+export function sendSuccess(res: Response, data: unknown, status = 200) {
+  return res.status(status).json(data);
+}
+
+export function sendError(res: Response, message: string, status = 400) {
+  return res.status(status).json({ message });
+}

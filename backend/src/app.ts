@@ -1,19 +1,15 @@
-﻿/**
- * Express application setup.
- * Registers middleware, API routes, and error handling.
- */
-
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
-// import routes from "./routes";
-// import { errorMiddleware } from "./middlewares/errorMiddleware";
+import routes from "./routes";
+import { errorMiddleware } from "./middlewares/errorMiddleware";
+import { env } from "./config/env";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: [env.frontendUrl, "http://localhost:5173", "http://localhost:5174"] }));
 app.use(express.json());
 
-// app.use("/api", routes);
-// app.use(errorMiddleware);
+app.use("/api", routes);
+app.use(errorMiddleware);
 
 export default app;

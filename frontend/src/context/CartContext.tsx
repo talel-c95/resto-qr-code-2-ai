@@ -1,4 +1,4 @@
-﻿import { createContext, useState, ReactNode } from "react";
+﻿import { createContext, useState, ReactNode, useEffect } from "react";
 import { CartItem } from "@/types/cart.types";
 
 export interface CartItemWithMeta extends CartItem {
@@ -17,8 +17,17 @@ interface CartContextType {
 
 export const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const STORAGE_KEY = "cart";
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItemWithMeta[]>([]);
+  const [items, setItems] = useState<CartItemWithMeta[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
 
   const addItem = (newItem: CartItemWithMeta) => {
     setItems((prev) => {

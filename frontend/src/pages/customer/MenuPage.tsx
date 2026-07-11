@@ -2,10 +2,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useMenu } from "@/hooks/useMenu";
 import { useCart } from "@/hooks/useCart";
+import { useMenuRecommendations } from "@/hooks/useMenuRecommendations";
 import { MenuFilter } from "@/components/customer/MenuFilter";
 import { MenuCard } from "@/components/customer/MenuCard";
 import { MenuItem } from "@/types/menu.types";
-
+import { WaiterCallButton } from "@/components/customer/WaiterCallButton";
+import { AIChatBox } from "@/components/customer/AIChatBox";
+import { useMenuTranslation } from "@/hooks/useMenuTranslation";
 export default function MenuPage() {
   const { tableId } = useParams<{ tableId: string }>();
   useEffect(() => {
@@ -15,18 +18,32 @@ export default function MenuPage() {
   }, [tableId]);
   const navigate = useNavigate();
   const { items, categories, loading, usingMockData } = useMenu(tableId);
+  const { recommendations } = useMenuRecommendations();
   const { items: cartItems, addItem, total } = useCart();
 
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const recommendedIds = useMemo(
+    () => new Set(recommendations.map((r) => r.menuItemId)),
+    [recommendations]
+  );
+
+  const itemsWithAiTags = useMemo(() => {
+    return items.map((item) =>
+      recommendedIds.has(item.id)
+        ? { ...item, tags: [...(item.tags ?? []), "ai-recommended"] }
+        : item
+    );
+  }, [items, recommendedIds]);
+  const { language, setLanguage, translatedItems, loading: translating } = useMenuTranslation(itemsWithAiTags);
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesCategory = activeCategoryId ? item.categoryId === activeCategoryId : true;
-      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [items, activeCategoryId, searchTerm]);
+  return translatedItems.filter((item) => {
+    const matchesCategory = activeCategoryId ? item.categoryId === activeCategoryId : true;
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+}, [translatedItems, activeCategoryId, searchTerm]);
 
   const handleAddToCart = (item: MenuItem) => {
     addItem({
@@ -52,9 +69,14 @@ export default function MenuPage() {
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="px-6 pt-8 pb-2">
         <h1 className="text-2xl font-bold text-gray-900">Our Menu</h1>
-        {tableId && <p className="text-sm text-gray-500">Table {tableId}</p>}
+        {tableId && (
+          <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-sm font-medium px-3 py-1 rounded-full mt-2">
+            <span>📍</span>
+            <span>Ordering for Table {tableId}</span>
+          </div>
+        )}
         {usingMockData && (
-          <p className="text-xs text-orange-500 mt-1">
+          <p className="text-xs text-orange-500 mt-2">
             Showing sample menu — backend not connected yet
           </p>
         )}
@@ -69,7 +91,22 @@ export default function MenuPage() {
           onSearchChange={setSearchTerm}
         />
       </div>
-
+        <div className="px-6 mt-2 flex gap-2">
+          {(["en", "fr", "ar"] as const).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              className={`text-xs font-mono uppercase px-3 py-1 rounded-full border transition ${
+                language === lang
+                  ? "bg-black text-white border-black"
+                  : "bg-white text-gray-600 border-gray-300 hover:border-gray-500"
+              }`}
+            >
+              {lang === "en" ? "EN" : lang === "fr" ? "FR" : "AR"}
+            </button>
+          ))}
+          {translating && <span className="text-xs text-gray-400 self-center">Translating...</span>}
+        </div>
       <div className="px-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {filteredItems.length === 0 ? (
           <p className="text-gray-500 col-span-full text-center py-10">
@@ -95,6 +132,9 @@ export default function MenuPage() {
           </button>
         </div>
       )}
+      {tableId && <WaiterCallButton tableId={tableId} />}
+      {tableId && <AIChatBox tableId={tableId} />}
+
     </div>
   );
 }

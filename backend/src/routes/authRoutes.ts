@@ -1,6 +1,9 @@
-﻿/**
- * authRoutes — backend/src/routes
- * Architecture placeholder — implement logic here.
- */
+﻿import { Router } from "express";
+import * as authController from "../controllers/authController";
 
-export {};
+const router = Router();
+
+router.post("/register", authController.register);
+router.post("/login", authController.login);
+
+export default router;

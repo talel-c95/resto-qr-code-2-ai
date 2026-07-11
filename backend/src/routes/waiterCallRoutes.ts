@@ -1,6 +1,8 @@
-﻿/**
- * waiterCallRoutes — backend/src/routes
- * Architecture placeholder — implement logic here.
- */
+﻿import { Router } from "express";
+import * as waiterCallController from "../controllers/waiterCallController";
 
-export {};
+const router = Router();
+
+router.post("/", waiterCallController.callWaiter);
+
+export default router;

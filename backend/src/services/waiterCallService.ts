@@ -1,6 +1,5 @@
-﻿/**
- * waiterCallService — backend/src/services
- * Architecture placeholder — implement logic here.
- */
+﻿import { WaiterCall } from "../models/WaiterCall";
 
-export {};
+export async function createWaiterCall(tableId: string) {
+  return WaiterCall.create({ tableId, status: "pending" });
+}

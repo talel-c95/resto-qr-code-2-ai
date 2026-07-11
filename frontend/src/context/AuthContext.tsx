@@ -11,7 +11,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  devLogin: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,14 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
-  const devLogin = () => {
-    const fakeUser: User = { id: "dev-1", email: "dev@test.com", role: "customer" };
-    const fakeToken = "dev-fake-token";
-    setUser(fakeUser);
-    setToken(fakeToken);
-    localStorage.setItem("token", fakeToken);
-    localStorage.setItem("user", JSON.stringify(fakeUser));
-    };
   const register = async (name: string, email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -76,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-        value={{ user, token, isAuthenticated: !!user, loading, error, login, register, logout, devLogin }}
+        value={{ user, token, isAuthenticated: !!user, loading, error, login, register, logout }}
     >
       {children}
     </AuthContext.Provider>

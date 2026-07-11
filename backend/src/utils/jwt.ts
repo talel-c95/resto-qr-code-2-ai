@@ -1,6 +1,18 @@
-﻿/**
- * jwt — backend/src/utils
- * Architecture placeholder — implement logic here.
- */
+﻿import jwt, { SignOptions } from "jsonwebtoken";
+import { env } from "../config/env";
 
-export {};
+export interface JwtPayload {
+  id: string;
+  email: string;
+  role: string;
+}
+
+export function signToken(payload: JwtPayload): string {
+  return jwt.sign(payload, env.jwtSecret, {
+    expiresIn: env.jwtExpiresIn,
+  } as SignOptions);
+}
+
+export function verifyToken(token: string): JwtPayload {
+  return jwt.verify(token, env.jwtSecret) as JwtPayload;
+}

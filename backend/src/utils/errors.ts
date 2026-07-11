@@ -1,6 +1,8 @@
-﻿/**
- * errors — backend/src/utils
- * Architecture placeholder — implement logic here.
- */
+﻿export class AppError extends Error {
+  status: number;
 
-export {};
+  constructor(message: string, status = 400) {
+    super(message);
+    this.status = status;
+  }
+}

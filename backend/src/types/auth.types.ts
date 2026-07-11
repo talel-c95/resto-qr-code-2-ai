@@ -1,6 +1,22 @@
-﻿/**
- * auth.types — backend/src/types
- * Architecture placeholder — implement logic here.
- */
+﻿export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+}
 
-export {};
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponseUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export interface AuthResponse {
+  user: AuthResponseUser;
+  token: string;
+}

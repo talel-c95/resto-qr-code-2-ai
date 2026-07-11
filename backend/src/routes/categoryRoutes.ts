@@ -1,6 +1,8 @@
-﻿/**
- * categoryRoutes — backend/src/routes
- * Architecture placeholder — implement logic here.
- */
+﻿import { Router } from "express";
+import * as categoryController from "../controllers/categoryController";
 
-export {};
+const router = Router();
+
+router.get("/", categoryController.getCategories);
+
+export default router;

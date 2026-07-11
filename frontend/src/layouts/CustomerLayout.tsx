@@ -1,6 +1,11 @@
-﻿/**
- * CustomerLayout — frontend/src/layouts
- * Architecture placeholder — implement logic here.
- */
+﻿import { Outlet } from "react-router-dom";
+import { Header } from "@/components/layout/Header";
 
-export {};
+export default function CustomerLayout() {
+  return (
+    <div>
+      <Header />
+      <Outlet />
+    </div>
+  );
+}

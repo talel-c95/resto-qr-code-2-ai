@@ -16,6 +16,7 @@ export default function CheckoutPage() {
       tableId: resolvedTableId,
       items: items.map((i) => ({
         menuItemId: i.menuItemId,
+        name: i.name,
         quantity: i.quantity,
         price: i.price,
       })),

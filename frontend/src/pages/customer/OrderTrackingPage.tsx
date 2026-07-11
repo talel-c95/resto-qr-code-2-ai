@@ -2,39 +2,56 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { OrderStatusTracker } from "@/components/customer/OrderStatusTracker";
 import { OrderStatus } from "@/types/order.types";
-
-const mockProgression: OrderStatus[] = [
-  "pending",
-  "accepted",
-  "preparing",
-  "ready",
-  "served",
-  "completed",
-];
+import * as orderService from "@/services/orderService";
 
 export default function OrderTrackingPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [status, setStatus] = useState<OrderStatus>("pending");
-  const [stepIndex, setStepIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Mock auto-progression until Socket.IO is connected to the real backend
-    if (stepIndex >= mockProgression.length - 1) return;
+    if (!id) return;
+    let isMounted = true;
 
-    const timer = setTimeout(() => {
-      const next = stepIndex + 1;
-      setStepIndex(next);
-      setStatus(mockProgression[next]);
-    }, 3000);
+    async function fetchStatus() {
+      try {
+        const order = await orderService.getOrder(id!);
+        if (isMounted) {
+          setStatus(order.status);
+          setError(null);
+        }
+      } catch (err) {
+        if (isMounted) setError("Could not load order status");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
 
-    return () => clearTimeout(timer);
-  }, [stepIndex]);
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 4000); // poll every 4s until Socket.IO is wired
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading order status...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Order Tracking</h1>
       <p className="text-sm text-gray-500 mb-6">Order #{id}</p>
+
+      {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
       <div className="bg-white rounded-xl p-6 mb-6">
         <OrderStatusTracker status={status} />
@@ -50,7 +67,7 @@ export default function OrderTrackingPage() {
       )}
 
       <p className="text-xs text-gray-400 mt-4 text-center">
-        Live updates via Socket.IO will replace this simulation once connected to the backend.
+        Status updates every few seconds. Live push updates via Socket.IO coming soon.
       </p>
     </div>
   );
