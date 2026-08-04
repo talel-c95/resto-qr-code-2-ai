@@ -1,19 +1,18 @@
 ﻿import { useNavigate } from 'react-router-dom';
+import { motion, type Variants } from "framer-motion";
+import { QrCode } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMenu } from '@/hooks/useMenu';
 
-function TileStrip({ color = '#BF4226' }: { color?: string }) {
-  return (
-    <svg viewBox="0 0 200 12" preserveAspectRatio="xMidYMid slice" className="w-full h-3">
-      <polyline
-        points="0,12 12.5,0 25,12 37.5,0 50,12 62.5,0 75,12 87.5,0 100,12 112.5,0 125,12 137.5,0 150,12 162.5,0 175,12 187.5,0 200,12"
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.12 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+};
 
 const FEATURED_TAGS = ['chef-recommendation', 'trending', 'best-seller'];
 
@@ -22,126 +21,132 @@ export default function LandingPage() {
   const { isAuthenticated, user, logout } = useAuth();
   const { items, loading } = useMenu(undefined);
 
-  const featured = items
-    .filter((item) => item.tags?.some((tag) => FEATURED_TAGS.includes(tag)))
-    .slice(0, 6);
-
-  // fallback so the section is never empty, even if no items carry those tags
+  const featured = items.filter((it) => it.tags?.some((t) => FEATURED_TAGS.includes(t))).slice(0, 6);
   const dishesToShow = featured.length > 0 ? featured : items.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-sand flex flex-col font-sans">
+    <div className="min-h-screen bg-noir flex flex-col font-sans relative overflow-hidden">
+      {/* Floating gradient blobs */}
+      <div className="absolute -top-20 -left-20 w-72 h-72 bg-gold/30 rounded-full blur-3xl animate-blob" />
+      <div className="absolute top-40 -right-24 w-80 h-80 bg-rust/20 rounded-full blur-3xl animate-blob-delay" />
+
       {/* Hero */}
-      <div className="bg-sidiblue text-whitewash px-6 pt-14 pb-8 text-center">
-        <p className="font-mono text-xs tracking-[0.2em] text-saffron uppercase mb-3">
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="relative px-6 pt-16 pb-8 text-center"
+      >
+        <motion.p variants={item} className="font-mono text-xs tracking-[0.25em] text-gold uppercase mb-4">
           Digital Menu · Table Service
-        </p>
-        <h1 className="font-display text-5xl font-semibold mb-3">Resto</h1>
-        <p className="text-whitewash/80 text-sm max-w-xs mx-auto leading-relaxed">
+        </motion.p>
+        <motion.h1 variants={item} className="font-display text-5xl font-semibold text-linen mb-3">
+          Resto AI
+        </motion.h1>
+        <motion.p variants={item} className="text-smoke text-sm max-w-xs mx-auto leading-relaxed">
           Your table, your pace. Scan the code, browse the menu, and order
           without waving anyone down.
-        </p>
-      </div>
-
-      <TileStrip color="#BF4226" />
+        </motion.p>
+      </motion.div>
 
       {/* Action area */}
-      <div className="px-6 py-10 flex flex-col items-center">
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="relative px-6 py-10 flex flex-col items-center"
+      >
         {isAuthenticated && (
-          <p className="text-sm text-ink/70 mb-6 font-mono">
+          <motion.p variants={item} className="text-sm text-smoke mb-6 font-mono">
             Welcome back, {user?.email}
-          </p>
+          </motion.p>
         )}
 
         <div className="w-full max-w-xs flex flex-col gap-4">
-          <button
+          <motion.button
+            variants={item}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/scan')}
-            className="bg-paprika text-whitewash py-4 rounded-xl font-medium text-base shadow-[0_4px_0_0_rgba(0,0,0,0.15)] hover:brightness-110 active:translate-y-[2px] active:shadow-none transition-all"
+            className="bg-gold text-noir py-4 rounded-xl font-semibold text-base flex items-center justify-center gap-2 animate-glow"
           >
+            <QrCode size={20} strokeWidth={2} />
             Scan QR Code
-          </button>
+          </motion.button>
 
           {!isAuthenticated && (
-            <button
+            <motion.button
+              variants={item}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/guest')}
-              className="bg-whitewash border-2 border-dashed border-sidiblue/30 text-ink py-4 rounded-xl font-medium text-base hover:border-sidiblue/60 transition"
+              className="bg-charcoal border border-gold/30 text-linen py-4 rounded-xl font-medium text-base hover:border-gold/60 transition-colors"
             >
               Continue as Guest
-            </button>
+            </motion.button>
           )}
 
           {isAuthenticated ? (
-            <div className="flex justify-center gap-4 text-xs font-mono uppercase tracking-wide text-ink/60 mt-4">
-              <button
-                onClick={() => navigate('/history')}
-                className="underline decoration-saffron decoration-2 underline-offset-4 hover:text-ink"
-              >
+            <motion.div variants={item} className="flex justify-center gap-4 text-xs font-mono uppercase tracking-wide text-smoke mt-4">
+              <button onClick={() => navigate('/history')} className="underline decoration-gold decoration-2 underline-offset-4 hover:text-linen">
                 Order History
               </button>
-              <span className="text-ink/30">|</span>
-              <button
-                onClick={logout}
-                className="underline decoration-paprika decoration-2 underline-offset-4 hover:text-ink"
-              >
+              <span className="text-smoke/40">|</span>
+              <button onClick={logout} className="underline decoration-rust decoration-2 underline-offset-4 hover:text-linen">
                 Log Out
               </button>
-            </div>
+            </motion.div>
           ) : (
-            <div className="flex justify-center gap-2 text-sm text-ink/60 mt-4">
+            <motion.div variants={item} className="flex justify-center gap-2 text-sm text-smoke mt-4">
               <span>Already have an account?</span>
-              <button
-                onClick={() => navigate('/login')}
-                className="text-paprika font-semibold underline underline-offset-2"
-              >
+              <button onClick={() => navigate('/login')} className="text-gold font-semibold underline underline-offset-2">
                 Log in
               </button>
-            </div>
+            </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Featured dishes */}
-      <div className="px-6 pb-12">
+      <div className="relative px-6 pb-12">
         <div className="flex items-baseline justify-between max-w-md mx-auto mb-4">
-          <h2 className="font-display text-2xl font-semibold text-ink">Chef's Picks</h2>
-          <span className="font-mono text-xs uppercase tracking-wide text-ink/50">
-            Today
-          </span>
+          <h2 className="font-display text-2xl font-semibold text-linen">Chef's Picks</h2>
+          <span className="font-mono text-xs uppercase tracking-wide text-smoke">Today</span>
         </div>
 
         {loading ? (
           <div className="max-w-md mx-auto grid grid-cols-2 gap-3">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-40 rounded-xl bg-ink/5 animate-pulse" />
+              <div key={i} className="h-40 rounded-xl bg-charcoal animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="max-w-md mx-auto grid grid-cols-2 gap-3">
-            {dishesToShow.map((item) => (
-              <button
-                key={item.id}
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="max-w-md mx-auto grid grid-cols-2 gap-3"
+          >
+            {dishesToShow.map((dish) => (
+              <motion.button
+                key={dish.id}
+                variants={item}
+                whileHover={{ y: -4, boxShadow: "0 8px 24px rgba(255,138,61,0.25)" }}
                 onClick={() => navigate('/scan')}
-                className="text-left bg-whitewash rounded-xl overflow-hidden border border-ink/10 hover:shadow-md transition"
+                className="text-left bg-charcoal rounded-xl overflow-hidden border border-gold/10"
               >
-                {item.imageUrl && (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="w-full h-24 object-cover"
-                    loading="lazy"
-                  />
+                {dish.imageUrl && (
+                  <img src={dish.imageUrl} alt={dish.name} className="w-full h-24 object-cover" loading="lazy" />
                 )}
                 <div className="p-3">
-                  <h3 className="font-medium text-sm text-ink truncate">{item.name}</h3>
-                  <p className="text-xs text-ink/60 mt-0.5">{item.price.toFixed(2)} TND</p>
+                  <h3 className="font-medium text-sm text-linen truncate">{dish.name}</h3>
+                  <p className="text-xs text-gold mt-0.5">{dish.price.toFixed(2)} TND</p>
                 </div>
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
-
-      <TileStrip color="#123C4E" />
     </div>
   );
 }

@@ -1,4 +1,5 @@
-﻿import { Category } from "@/types/menu.types";
+﻿import { motion } from "framer-motion";
+import { Category } from "@/types/menu.types";
 
 interface MenuFilterProps {
   categories: Category[];
@@ -17,37 +18,40 @@ export function MenuFilter({
 }: MenuFilterProps) {
   return (
     <div className="flex flex-col gap-3 mb-4">
-      <input
+      <motion.input
+        whileFocus={{ scale: 1.01, borderColor: "#FF8A3D" }}
         type="text"
         placeholder="Search menu..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+        className="bg-charcoal border border-gold/20 text-linen placeholder-smoke rounded-lg px-4 py-2 w-full focus:outline-none transition-colors"
       />
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        <button
+        <motion.button
+          whileTap={{ scale: 0.95 }}
           onClick={() => onSelectCategory(null)}
-          className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
+          className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
             activeCategoryId === null
-              ? "bg-black text-white"
-              : "bg-gray-100 text-gray-700"
+              ? "bg-gold text-noir"
+              : "bg-charcoal text-smoke border border-gold/10"
           }`}
         >
           All
-        </button>
+        </motion.button>
         {categories.map((cat) => (
-          <button
+          <motion.button
             key={cat.id}
+            whileTap={{ scale: 0.95 }}
             onClick={() => onSelectCategory(cat.id)}
-            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
+            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
               activeCategoryId === cat.id
-                ? "bg-black text-white"
-                : "bg-gray-100 text-gray-700"
+                ? "bg-gold text-noir"
+                : "bg-charcoal text-smoke border border-gold/10"
             }`}
           >
             {cat.name}
-          </button>
+          </motion.button>
         ))}
       </div>
     </div>

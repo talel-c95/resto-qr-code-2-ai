@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 
 export default function CustomerLayout() {
   return (
-    <div>
+    <div className="min-h-screen bg-noir font-sans">
       <Header />
       <Outlet />
     </div>

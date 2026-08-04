@@ -1,11 +1,23 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+};
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, loading, error, devLogin } = useAuth(); // add devLogin here
+  const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,53 +31,80 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-6 text-center">
-      <h1 className="text-2xl font-semibold mb-6">Log In</h1>
+    <div className="min-h-screen bg-noir flex flex-col items-center justify-center px-6 text-center">
+      <motion.h1
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="font-display text-2xl font-semibold text-linen mb-6"
+      >
+        Log In
+      </motion.h1>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-xs flex flex-col gap-4">
-        <input
+      <motion.form
+        variants={container}
+        initial="hidden"
+        animate="show"
+        onSubmit={handleSubmit}
+        className="w-full max-w-xs flex flex-col gap-4"
+      >
+        <motion.input
+          variants={item}
+          whileFocus={{ scale: 1.02, borderColor: "#FF8A3D" }}
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border border-gray-300 rounded-lg px-4 py-3"
+          className="bg-charcoal border border-gold/20 text-linen placeholder-smoke rounded-lg px-4 py-3 focus:outline-none transition-colors"
           required
         />
-        <input
+        <motion.input
+          variants={item}
+          whileFocus={{ scale: 1.02, borderColor: "#FF8A3D" }}
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border border-gray-300 rounded-lg px-4 py-3"
+          className="bg-charcoal border border-gold/20 text-linen placeholder-smoke rounded-lg px-4 py-3 focus:outline-none transition-colors"
           required
         />
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && (
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-rust text-sm">
+            {error}
+          </motion.p>
+        )}
 
-        <button
+        <motion.button
+          variants={item}
+          whileHover={{ scale: loading ? 1 : 1.02 }}
+          whileTap={{ scale: loading ? 1 : 0.97 }}
           type="submit"
           disabled={loading}
-          className="bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-50"
+          className="bg-gold text-noir py-3 rounded-lg font-semibold hover:brightness-110 active:brightness-95 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
         >
+          {loading && (
+            <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}>
+              <Loader2 size={18} strokeWidth={2} />
+            </motion.span>
+          )}
           {loading ? "Logging in..." : "Log In"}
-        </button>
-      </form>
+        </motion.button>
+      </motion.form>
 
-      <p className="text-sm text-gray-500 mt-4">
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="text-sm text-smoke mt-4"
+      >
         Don't have an account?{" "}
         <button
-            onClick={() => {
-                devLogin();
-                navigate("/");
-            }}
-            className="text-xs text-gray-400 underline mt-4"
-            >
-            [Dev] Skip login (temporary, remove before backend is live)
-        </button>
-        <button onClick={() => navigate("/register")} className="text-black font-medium underline">
+          onClick={() => navigate("/register")}
+          className="text-gold font-medium underline underline-offset-2"
+        >
           Register
         </button>
-      </p>
+      </motion.p>
     </div>
   );
 }

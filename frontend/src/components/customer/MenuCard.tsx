@@ -1,4 +1,5 @@
-﻿import { MenuItem } from "@/types/menu.types";
+﻿import { motion } from "framer-motion";
+import { MenuItem } from "@/types/menu.types";
 import { DynamicMenuBadge } from "./DynamicMenuBadge";
 
 interface MenuCardProps {
@@ -8,7 +9,11 @@ interface MenuCardProps {
 
 export function MenuCard({ item, onAddToCart }: MenuCardProps) {
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden flex flex-col bg-white">
+    <motion.div
+      layout
+      whileHover={{ y: -4 }}
+      className="border border-gold/10 bg-charcoal rounded-xl overflow-hidden flex flex-col transition-shadow hover:shadow-lg hover:shadow-gold/10"
+    >
       {item.imageUrl && (
         <img
           src={item.imageUrl}
@@ -20,13 +25,13 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps) {
 
       <div className="p-4 flex flex-col gap-2">
         <div className="flex justify-between items-start gap-2">
-          <h3 className="font-semibold text-gray-900">{item.name}</h3>
-          <span className="font-medium text-gray-900 whitespace-nowrap">
+          <h3 className="font-medium text-linen">{item.name}</h3>
+          <span className="font-medium text-gold whitespace-nowrap">
             {item.price.toFixed(2)} TND
           </span>
         </div>
 
-        <p className="text-sm text-gray-500">{item.description}</p>
+        <p className="text-sm text-smoke">{item.description}</p>
 
         {item.tags && item.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
@@ -36,13 +41,15 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps) {
           </div>
         )}
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => onAddToCart(item)}
-          className="mt-2 bg-black text-white text-sm py-2 rounded-lg font-medium hover:bg-gray-800 transition"
+          className="mt-2 bg-gold text-noir text-sm py-2 rounded-lg font-medium hover:brightness-110 transition-colors"
         >
           Add to Cart
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }

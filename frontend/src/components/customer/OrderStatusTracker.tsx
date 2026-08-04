@@ -1,4 +1,5 @@
-﻿import { OrderStatus } from "@/types/order.types";
+﻿import { motion, type Variants } from "framer-motion";
+import { OrderStatus } from "@/types/order.types";
 
 interface OrderStatusTrackerProps {
   status: OrderStatus;
@@ -13,49 +14,65 @@ const steps: { key: OrderStatus; label: string }[] = [
   { key: "completed", label: "Completed" },
 ];
 
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const item = {
+  hidden: { opacity: 0, x: -12 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
+
 export function OrderStatusTracker({ status }: OrderStatusTrackerProps) {
   const currentIndex = steps.findIndex((s) => s.key === status);
 
   if (status === "cancelled") {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-        <p className="text-red-600 font-semibold">This order was cancelled.</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-rust/10 border border-rust/30 rounded-xl p-6 text-center"
+      >
+        <p className="text-rust font-semibold">This order was cancelled.</p>
+      </motion.div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <motion.div variants={container} initial="hidden" animate="show" className="flex flex-col gap-4">
       {steps.map((step, index) => {
         const isDone = index < currentIndex;
         const isActive = index === currentIndex;
 
         return (
-          <div key={step.key} className="flex items-center gap-3">
-            <div
+          <motion.div key={step.key} Variants={item} className="flex items-center gap-3">
+            <motion.div
+              animate={isActive ? { scale: [1, 1.15, 1] } : {}}
+              transition={isActive ? { repeat: Infinity, duration: 1.6, ease: "easeInOut" } : {}}
               className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                 isDone
-                  ? "bg-black text-white"
+                  ? "bg-gold text-noir"
                   : isActive
-                  ? "bg-black text-white ring-4 ring-gray-200"
-                  : "bg-gray-200 text-gray-400"
+                  ? "bg-gold text-noir ring-4 ring-gold/20"
+                  : "bg-charcoal border border-smoke/30 text-smoke"
               }`}
             >
               {isDone ? "✓" : index + 1}
-            </div>
+            </motion.div>
             <span
               className={`font-medium ${
-                isActive ? "text-gray-900" : isDone ? "text-gray-500" : "text-gray-400"
+                isActive ? "text-linen" : isDone ? "text-smoke" : "text-smoke/50"
               }`}
             >
               {step.label}
             </span>
             {isActive && (
-              <span className="text-xs text-gray-400 ml-auto animate-pulse">in progress...</span>
+              <span className="text-xs text-gold ml-auto animate-pulse">in progress...</span>
             )}
-          </div>
+          </motion.div>
         );
       })}
-    </div>
+    </motion.div>
   );
 }

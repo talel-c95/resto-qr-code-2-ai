@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { ReceiptView } from "@/components/customer/ReceiptView";
 import * as receiptService from "@/services/receiptService";
 import { ReceiptData } from "@/services/receiptService";
@@ -52,18 +53,22 @@ export default function ReceiptPage() {
 
   if (loading || !receipt) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading receipt...</p>
+      <div className="min-h-screen bg-noir flex items-center justify-center">
+        <p className="text-smoke">Loading receipt...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-8">
+    <div className="min-h-screen bg-noir px-4 sm:px-6 py-8">
       {usingMockData && (
-        <p className="text-xs text-orange-500 text-center mb-4">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-xs text-gold text-center mb-4"
+        >
           Showing sample receipt — could not load real order
-        </p>
+        </motion.p>
       )}
 
       <ReceiptView
@@ -74,12 +79,17 @@ export default function ReceiptPage() {
         createdAt={receipt.createdAt}
       />
 
-      <button
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
         onClick={() => navigate("/")}
-        className="w-full max-w-sm mx-auto block mt-6 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition"
+        className="w-full max-w-sm mx-auto block mt-6 bg-gold text-noir py-3 rounded-lg font-semibold hover:brightness-110 transition-colors"
       >
         Back to Home
-      </button>
+      </motion.button>
     </div>
   );
 }
