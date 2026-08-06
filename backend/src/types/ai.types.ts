@@ -36,3 +36,21 @@ export interface AITranslateResult {
   language: MenuLanguage;
   items: TranslatedMenuItem[];
 }
+
+export interface AIAnalyticsResult {
+  summary: string;
+  insights: string[];
+  suggestions: string[];
+}
+
+export interface AITrendingItem {
+  menuItemId: string;
+  name: string;
+  recentOrders: number;
+  previousOrders: number;
+  blurb: string;
+}
+
+export interface AITrendingResult {
+  items: AITrendingItem[];
+}

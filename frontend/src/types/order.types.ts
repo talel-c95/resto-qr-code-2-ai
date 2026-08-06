@@ -1,7 +1,4 @@
-﻿/**
- * Order types.
- */
-
+﻿
 export type OrderStatus =
   | "pending"
   | "accepted"
@@ -17,4 +14,14 @@ export interface Order {
   status: OrderStatus;
   total: number;
   createdAt: string;
+}
+export interface OrderItemSummary {
+  menuItemId: string;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+export interface AdminOrder extends Order {
+  items: OrderItemSummary[];
 }

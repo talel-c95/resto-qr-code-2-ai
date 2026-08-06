@@ -1,9 +1,11 @@
 ﻿import http from "http";
 import app from "./app";
 import { connectDatabase } from "./config/database";
+import { initSocket } from "./config/socket";
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
+initSocket(server);
 
 async function start() {
   await connectDatabase();

@@ -1,6 +1,23 @@
-﻿/**
- * socketService — frontend/src/services
- * Architecture placeholder — implement logic here.
- */
+﻿import { io, Socket } from "socket.io-client";
 
-export {};
+let socket: Socket | null = null;
+
+export function connectSocket(token?: string): Socket {
+  if (socket) {
+    socket.disconnect();
+  }
+  socket = io(import.meta.env.VITE_SOCKET_URL, {
+    auth: token ? { token } : {},
+    autoConnect: true,
+  });
+  return socket;
+}
+
+export function disconnectSocket() {
+  socket?.disconnect();
+  socket = null;
+}
+
+export function getSocket(): Socket | null {
+  return socket;
+}

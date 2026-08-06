@@ -30,3 +30,20 @@ export async function translate(req: AuthRequest, res: Response, next: NextFunct
     next(err);
   }
 }
+export async function analytics(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const result = await aiService.getRestaurantAnalytics();
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function trending(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const result = await aiService.getTrendingItems();
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}

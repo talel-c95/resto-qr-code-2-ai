@@ -56,3 +56,41 @@ export async function getOrderHistory(req: AuthRequest, res: Response, next: Nex
     next(err);
   }
 }
+
+export async function getAllOrders(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const results = await orderService.getAllOrders();
+    res.status(200).json(
+      results.map(({ order, items }) => ({
+        id: order._id.toString(),
+        tableId: order.tableId,
+        status: order.status,
+        total: order.total,
+        createdAt: order.createdAt,
+        items: items.map((i) => ({
+          menuItemId: i.menuItemId,
+          name: i.name,
+          quantity: i.quantity,
+          price: i.price,
+        })),
+      }))
+    );
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateOrderStatus(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const order = await orderService.updateOrderStatus(req.params.id, req.body.status);
+    res.status(200).json({
+      id: order._id.toString(),
+      tableId: order.tableId,
+      status: order.status,
+      total: order.total,
+      createdAt: order.createdAt,
+    });
+  } catch (err) {
+    next(err);
+  }
+}

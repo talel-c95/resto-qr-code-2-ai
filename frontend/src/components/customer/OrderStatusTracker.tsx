@@ -14,18 +14,19 @@ const steps: { key: OrderStatus; label: string }[] = [
   { key: "completed", label: "Completed" },
 ];
 
-const container = {
+const container: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
 
-const item = {
+const item: Variants = {
   hidden: { opacity: 0, x: -12 },
   show: { opacity: 1, x: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
 export function OrderStatusTracker({ status }: OrderStatusTrackerProps) {
   const currentIndex = steps.findIndex((s) => s.key === status);
+  const isFinalStep = status === "completed";
 
   if (status === "cancelled") {
     return (
@@ -46,19 +47,19 @@ export function OrderStatusTracker({ status }: OrderStatusTrackerProps) {
         const isActive = index === currentIndex;
 
         return (
-          <motion.div key={step.key} Variants={item} className="flex items-center gap-3">
+          <motion.div key={step.key} variants={item} className="flex items-center gap-3">
             <motion.div
-              animate={isActive ? { scale: [1, 1.15, 1] } : {}}
-              transition={isActive ? { repeat: Infinity, duration: 1.6, ease: "easeInOut" } : {}}
+              animate={isActive && !isFinalStep ? { scale: [1, 1.15, 1] } : {}}
+              transition={isActive && !isFinalStep ? { repeat: Infinity, duration: 1.6, ease: "easeInOut" } : {}}
               className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                isDone
+                isDone || (isActive && isFinalStep)
                   ? "bg-gold text-noir"
                   : isActive
                   ? "bg-gold text-noir ring-4 ring-gold/20"
                   : "bg-charcoal border border-smoke/30 text-smoke"
               }`}
             >
-              {isDone ? "✓" : index + 1}
+              {isDone || (isActive && isFinalStep) ? "✓" : index + 1}
             </motion.div>
             <span
               className={`font-medium ${
@@ -67,7 +68,7 @@ export function OrderStatusTracker({ status }: OrderStatusTrackerProps) {
             >
               {step.label}
             </span>
-            {isActive && (
+            {isActive && !isFinalStep && (
               <span className="text-xs text-gold ml-auto animate-pulse">in progress...</span>
             )}
           </motion.div>

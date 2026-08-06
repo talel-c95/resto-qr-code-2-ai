@@ -11,6 +11,7 @@
 import OpenAI from "openai";
 import { env } from "../config/env";
 import { MenuItem } from "../models/MenuItem";
+import { Order } from "../models/Order";
 import { OrderItem } from "../models/OrderItem";
 import { AppError } from "../utils/errors";
 import {
@@ -18,7 +19,10 @@ import {
   AIChatResult,
   AIRecommendationItem,
   AIRecommendResult,
-  TranslatedMenuItem, AITranslateResult
+  TranslatedMenuItem,
+  AITranslateResult,
+  AIAnalyticsResult,
+  AITrendingResult,
 } from "../types/ai.types";
 
 const groq = new OpenAI({
@@ -279,4 +283,198 @@ export async function getTranslatedMenu(language: string): Promise<AITranslateRe
   });
 
   return { language: language as AITranslateResult["language"], items };
+}
+
+function daysAgo(n: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+async function getAnalyticsInputData() {
+  const completedOrders = await Order.find({ status: "completed" }).sort({ createdAt: -1 }).limit(200);
+  const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
+  const orderCount = completedOrders.length;
+  const averageOrderValue = orderCount > 0 ? totalRevenue / orderCount : 0;
+
+  const orderIds = completedOrders.map((o) => o._id.toString());
+  const items = await OrderItem.find({ orderId: { $in: orderIds } });
+
+  const itemStatsMap = new Map<string, { name: string; quantity: number; revenue: number }>();
+  for (const item of items) {
+    const existing = itemStatsMap.get(item.menuItemId) ?? { name: item.name, quantity: 0, revenue: 0 };
+    existing.quantity += item.quantity;
+    existing.revenue += item.price * item.quantity;
+    itemStatsMap.set(item.menuItemId, existing);
+  }
+  const topItems = Array.from(itemStatsMap.values())
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 8);
+
+  const bottomItems = Array.from(itemStatsMap.values())
+    .sort((a, b) => a.quantity - b.quantity)
+    .slice(0, 5);
+
+  return { totalRevenue, orderCount, averageOrderValue, topItems, bottomItems };
+}
+
+function buildAnalyticsSystemPrompt(data: Awaited<ReturnType<typeof getAnalyticsInputData>>): string {
+  return `You are a restaurant business analyst. Below is REAL data from this restaurant's completed orders. You must base everything you say strictly on these numbers — never invent a statistic, trend, or number that is not derivable from this data.
+
+DATA:
+- Total revenue (completed orders): ${data.totalRevenue.toFixed(2)} DT
+- Number of completed orders: ${data.orderCount}
+- Average order value: ${data.averageOrderValue.toFixed(2)} DT
+- Top selling items: ${data.topItems.map((i) => `${i.name} (${i.quantity} sold, ${i.revenue.toFixed(2)} DT)`).join(", ") || "none yet"}
+- Lowest selling items: ${data.bottomItems.map((i) => `${i.name} (${i.quantity} sold)`).join(", ") || "none yet"}
+
+Respond ONLY with valid JSON, no markdown, no code fences, in this exact shape:
+{"summary": "2-3 sentence plain-language overview of performance", "insights": ["short insight grounded in the data above", "..."], "suggestions": ["short actionable suggestion", "..."]}
+
+Rules:
+- "insights" should have 2-4 items, each one sentence, each referencing something actually in the DATA above.
+- "suggestions" should have 1-3 items, each one sentence, practical for a restaurant owner.
+- If order count is very low (under 5), say so honestly rather than drawing strong conclusions from too little data.
+- Never state a number that isn't in the DATA section above.`;
+}
+
+export async function getRestaurantAnalytics(): Promise<AIAnalyticsResult> {
+  const data = await getAnalyticsInputData();
+  const systemPrompt = buildAnalyticsSystemPrompt(data);
+
+  let completion;
+  try {
+    completion = await groq.chat.completions.create({
+      model: MODEL,
+      messages: [{ role: "system", content: systemPrompt }],
+      temperature: 0.4,
+      max_tokens: 500,
+      response_format: { type: "json_object" },
+    });
+  } catch (err) {
+    console.error("Groq API call failed (analytics):", err);
+    throw new AppError("AI analytics is unavailable right now", 502);
+  }
+
+  const raw = completion.choices[0]?.message?.content ?? "";
+  const parsed = extractJson(raw);
+
+  return {
+    summary: parsed && typeof parsed.summary === "string" ? parsed.summary : "Not enough data to summarize yet.",
+    insights:
+      parsed && Array.isArray(parsed.insights)
+        ? parsed.insights.filter((i: unknown) => typeof i === "string")
+        : [],
+    suggestions:
+      parsed && Array.isArray(parsed.suggestions)
+        ? parsed.suggestions.filter((s: unknown) => typeof s === "string")
+        : [],
+  };
+}
+
+async function getTrendingInputData() {
+  const recentStart = daysAgo(7);
+  const previousStart = daysAgo(14);
+
+  const recentOrders = await Order.find({ status: "completed", createdAt: { $gte: recentStart } });
+  const previousOrders = await Order.find({
+    status: "completed",
+    createdAt: { $gte: previousStart, $lt: recentStart },
+  });
+
+  const recentIds = recentOrders.map((o) => o._id.toString());
+  const previousIds = previousOrders.map((o) => o._id.toString());
+
+  const recentItems = await OrderItem.find({ orderId: { $in: recentIds } });
+  const previousItems = await OrderItem.find({ orderId: { $in: previousIds } });
+
+  const recentMap = new Map<string, { name: string; quantity: number }>();
+  for (const item of recentItems) {
+    const existing = recentMap.get(item.menuItemId) ?? { name: item.name, quantity: 0 };
+    existing.quantity += item.quantity;
+    recentMap.set(item.menuItemId, existing);
+  }
+
+  const previousMap = new Map<string, number>();
+  for (const item of previousItems) {
+    previousMap.set(item.menuItemId, (previousMap.get(item.menuItemId) ?? 0) + item.quantity);
+  }
+
+  const allMenuItems = await MenuItem.find();
+  const menuNameMap = new Map(allMenuItems.map((m) => [m._id.toString(), m.name]));
+
+  const trending = Array.from(recentMap.entries())
+    .map(([menuItemId, data]) => ({
+      menuItemId,
+      name: menuNameMap.get(menuItemId) ?? data.name,
+      recentOrders: data.quantity,
+      previousOrders: previousMap.get(menuItemId) ?? 0,
+    }))
+    .filter((i) => i.recentOrders > i.previousOrders)
+    .sort((a, b) => b.recentOrders - b.previousOrders - (a.recentOrders - a.previousOrders))
+    .slice(0, 5);
+
+  return trending;
+}
+
+function buildTrendingSystemPrompt(
+  trending: { menuItemId: string; name: string; recentOrders: number; previousOrders: number }[]
+): string {
+  const list = trending
+    .map((t) => `- ${t.name}: ${t.recentOrders} orders in the last 7 days (was ${t.previousOrders} the 7 days before)`)
+    .join("\n");
+
+  return `Below are dishes with REAL rising order counts at a restaurant, comparing the last 7 days to the 7 days before that.
+
+${list}
+
+For each dish, write a short (under 12 words) blurb explaining it's trending, referencing the real growth honestly (e.g. "Orders nearly doubled this week" or "New interest building, worth featuring"). Do not invent numbers not shown above.
+
+Respond ONLY with valid JSON, no markdown, no code fences, in this exact shape:
+{"blurbs": [{"menuItemId": "<id>", "blurb": "<short blurb>"}, ...]}
+
+You must include every menuItemId listed above, in the same order.`;
+}
+
+export async function getTrendingItems(): Promise<AITrendingResult> {
+  const trending = await getTrendingInputData();
+
+  if (trending.length === 0) {
+    return { items: [] };
+  }
+
+  const systemPrompt = buildTrendingSystemPrompt(trending);
+
+  let completion;
+  try {
+    completion = await groq.chat.completions.create({
+      model: MODEL,
+      messages: [{ role: "system", content: systemPrompt }],
+      temperature: 0.5,
+      max_tokens: 300,
+      response_format: { type: "json_object" },
+    });
+  } catch (err) {
+    console.error("Groq API call failed (trending):", err);
+    // The underlying numbers are still real and correct even if the AI phrasing
+    // call fails — fall back to a generic blurb instead of erroring out entirely.
+    return {
+      items: trending.map((t) => ({ ...t, blurb: "Trending up this week" })),
+    };
+  }
+
+  const raw = completion.choices[0]?.message?.content ?? "";
+  const parsed = extractJson(raw);
+  const rawBlurbs: { menuItemId: string; blurb: string }[] =
+    parsed && Array.isArray(parsed.blurbs) ? parsed.blurbs : [];
+
+  const blurbMap = new Map(rawBlurbs.map((b) => [b.menuItemId, b.blurb]));
+
+  return {
+    items: trending.map((t) => ({
+      ...t,
+      blurb: blurbMap.get(t.menuItemId) || "Trending up this week",
+    })),
+  };
 }

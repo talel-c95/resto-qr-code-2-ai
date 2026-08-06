@@ -1,6 +1,12 @@
-﻿/**
- * tableRoutes — backend/src/routes
- * Architecture placeholder — implement logic here.
- */
+﻿import { Router } from "express";
+import * as tableController from "../controllers/tableController";
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware";
 
-export {};
+const router = Router();
+
+router.get("/", adminAuthMiddleware, tableController.getTables);
+router.post("/", adminAuthMiddleware, tableController.createTable);
+router.delete("/:id", adminAuthMiddleware, tableController.deleteTable);
+router.get("/:id/qrcode", adminAuthMiddleware, tableController.getTableQrCode);
+
+export default router;

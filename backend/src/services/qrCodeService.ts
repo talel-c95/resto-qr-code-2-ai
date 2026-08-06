@@ -1,6 +1,7 @@
-﻿/**
- * qrCodeService — backend/src/services
- * Architecture placeholder — implement logic here.
- */
+﻿import QRCode from "qrcode";
+import { env } from "../config/env";
 
-export {};
+export async function generateTableQrCode(tableNumber: number): Promise<string> {
+  const url = `${env.frontendUrl}/menu/${tableNumber}`;
+  return QRCode.toDataURL(url, { width: 400, margin: 2 });
+}

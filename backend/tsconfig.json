@@ -18,6 +18,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../frontend/src/types/waiterCall.types.ts"],
   "exclude": ["node_modules", "dist"]
 }

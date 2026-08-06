@@ -1,6 +1,6 @@
-﻿/**
- * useSocket — frontend/src/hooks
- * Architecture placeholder — implement logic here.
- */
+﻿import { useContext } from "react";
+import { SocketContext } from "@/context/SocketContext";
 
-export {};
+export function useSocket() {
+  return useContext(SocketContext);
+}

@@ -1,6 +1,7 @@
 ﻿import { Router } from "express";
 import * as orderController from "../controllers/orderController";
 import { authMiddleware } from "../middlewares/authMiddleware";
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware";
 import { Response, NextFunction } from "express";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import { verifyToken } from "../utils/jwt";
@@ -13,7 +14,7 @@ function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       req.user = verifyToken(authHeader.split(" ")[1]);
     } catch {
-      
+
     }
   }
   next();
@@ -21,6 +22,8 @@ function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
 
 router.post("/", optionalAuth, orderController.createOrder);
 router.get("/history", authMiddleware, orderController.getOrderHistory);
+router.get("/", adminAuthMiddleware, orderController.getAllOrders);
+router.patch("/:id/status", adminAuthMiddleware, orderController.updateOrderStatus);
 router.get("/:id", orderController.getOrder);
 
 export default router;
